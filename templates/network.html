@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Network{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>SERN Network</h1>
+        <p>The trust-driven emergency response network - where reliability is built through action</p>
+    </div>
+    
+    <!-- Network Stats -->
+    <div class="network-stats">
+        <div class="stat-card">
+            <span class="stat-icon">🏥</span>
+            <span class="stat-number">{{ stats.total_organizations }}</span>
+            <span class="stat-label">Organizations</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">💉</span>
+            <span class="stat-number">{{ stats.total_donors }}</span>
+            <span class="stat-label">Blood Donors</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🙋</span>
+            <span class="stat-number">{{ stats.total_volunteers }}</span>
+            <span class="stat-label">Volunteers</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">✅</span>
+            <span class="stat-number">{{ stats.requests_fulfilled }}</span>
+            <span class="stat-label">Requests Fulfilled</span>
+        </div>
+        <div class="stat-card highlight">
+            <span class="stat-icon">🆘</span>
+            <span class="stat-number">{{ stats.active_requests }}</span>
+            <span class="stat-label">Active Emergencies</span>
+        </div>
+    </div>
+    
+    <div class="leaderboards-grid">
+        <!-- Top Organizations by ECC -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>🏆 Top Organizations</h2>
+                <span class="metric-type">By ECC Credits</span>
+            </div>
+            <div class="leaderboard-description">
+                <p>Emergency Contribution Credits measure institutional reliability and successful coordination.</p>
+            </div>
+            <div class="leaderboard-list">
+                {% for org in top_orgs %}
+                <div class="leaderboard-item {{ 'highlight' if loop.index <= 3 else '' }}">
+                    <span class="rank">{{ loop.index }}</span>
+                    <div class="item-info">
+                        <span class="item-icon">
+                            {% if org.role == 'hospital' %}🏥{% elif org.role == 'blood_bank' %}🩸{% elif org.role == 'ngo' %}🤲{% else %}🚑{% endif %}
+                        </span>
+                        <div class="item-details">
+                            <strong>{{ org.name }}</strong>
+                            <span class="item-meta">{{ org.city }} • {{ org.role.replace('_', ' ').title() }}</span>
+                        </div>
+                    </div>
+                    <div class="item-score">
+                        <span class="score-value">{{ org.ecc_credits }}</span>
+                        <span class="score-label">ECC</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-data">No verified organizations yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Top Contributors by IRI -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>⭐ Top Contributors</h2>
+                <span class="metric-type">By IRI Score</span>
+            </div>
+            <div class="leaderboard-description">
+                <p>Individual Reliability Index reflects response behavior, consistency, and contribution history.</p>
+            </div>
+            <div class="leaderboard-list">
+                {% for user in top_contributors %}
+                <div class="leaderboard-item {{ 'highlight' if loop.index <= 3 else '' }}">
+                    <span class="rank">{{ loop.index }}</span>
+                    <div class="item-info">
+                        <span class="item-icon">
+                            {% if user.role == 'donor' %}💉{% else %}🙋{% endif %}
+                        </span>
+                        <div class="item-details">
+                            <strong>{{ user.name }}</strong>
+                            <span class="item-meta">
+                                {{ user.city }}
+                                {% if user.blood_group %} • {{ user.blood_group }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="item-score">
+                        <div class="iri-mini-gauge">
+                            <div class="iri-mini-fill" style="width: {{ user.iri_score }}%"></div>
+                        </div>
+                        <span class="score-value">{{ "%.1f"|format(user.iri_score) }}</span>
+                        <span class="score-label">IRI</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-data">No contributors yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- How Trust Works -->
+    <div class="info-section">
+        <h2>How Trust Works in SERN</h2>
+        <div class="trust-explainer">
+            <div class="trust-card">
+                <h3>🏛️ Emergency Contribution Credits (ECC)</h3>
+                <p><strong>For Organizations</strong></p>
+                <ul>
+                    <li>Earned when emergency requests are successfully fulfilled</li>
+                    <li>Multiplied for critical/urgent requests</li>
+                    <li>Bonus for rare blood group coordination</li>
+                    <li>Higher ECC = Priority in network partnerships</li>
+                </ul>
+            </div>
+            <div class="trust-card">
+                <h3>⭐ Individual Reliability Index (IRI)</h3>
+                <p><strong>For Donors & Volunteers</strong></p>
+                <ul>
+                    <li>Starts at 50, ranges from 0-100</li>
+                    <li>Increases with fulfilled contributions</li>
+                    <li>Faster responses earn bonus points</li>
+                    <li>Decreases when declining requests</li>
+                    <li>Higher IRI = Earlier notification for emergencies</li>
+                </ul>
+            </div>
+            <div class="trust-card">
+                <h3>🎯 Smart Matching Priority</h3>
+                <p><strong>How It Affects Matching</strong></p>
+                <ul>
+                    <li>Medical eligibility is always primary</li>
+                    <li>Location proximity is secondary</li>
+                    <li>IRI/ECC used as tie-breakers only</li>
+                    <li>Ensures reliability without compromising fairness</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SDG 17 Section -->
+    <div class="sdg-section">
+        <div class="sdg-content">
+            <img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Icons-17.jpg" alt="SDG 17" class="sdg-icon" onerror="this.style.display='none'">
+            <div class="sdg-text">
+                <h3>SDG 17: Partnerships for the Goals</h3>
+                <p>SERN embodies the spirit of SDG 17 by creating sustainable partnerships between healthcare stakeholders. 
+                Every successful emergency coordination strengthens the network, building a self-reinforcing system 
+                where trust and cooperation drive better health outcomes for all.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

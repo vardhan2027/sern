@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-page">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <span class="avatar-icon">
+                    {% if current_user.role == 'hospital' %}🏥{% elif current_user.role == 'blood_bank' %}🩸{% elif current_user.role == 'ngo' %}🤲{% elif current_user.role == 'ambulance' %}🚑{% elif current_user.role == 'donor' %}💉{% else %}🙋{% endif %}
+                </span>
+            </div>
+            <div class="profile-info">
+                <h1>{{ current_user.name }}</h1>
+                <p class="role-badge role-{{ current_user.role }}">{{ current_user.role.replace('_', ' ').title() }}</p>
+                <p class="member-since">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+            </div>
+        </div>
+        
+        <div class="profile-grid">
+            <!-- Trust Metrics -->
+            <div class="profile-card metrics-card">
+                <h3>Trust Metrics</h3>
+                <div class="metrics-grid">
+                    {% if current_user.is_organization() %}
+                    <div class="metric">
+                        <span class="metric-value">{{ current_user.ecc_credits }}</span>
+                        <span class="metric-label">ECC Credits</span>
+                        <span class="metric-desc">Emergency Contribution Credits</span>
+                    </div>
+                    {% else %}
+                    <div class="metric">
+                        <div class="iri-gauge">
+                            <div class="iri-fill" style="width: {{ current_user.iri_score }}%"></div>
+                        </div>
+                        <span class="metric-value">{{ "%.1f"|format(current_user.iri_score) }}</span>
+                        <span class="metric-label">IRI Score</span>
+                        <span class="metric-desc">Individual Reliability Index (0-100)</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="metric">
+                        <span class="metric-value">{{ current_user.total_requests_fulfilled }}</span>
+                        <span class="metric-label">Fulfilled</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">{{ current_user.total_requests_received }}</span>
+                        <span class="metric-label">Received</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">{{ "%.0f"|format(current_user.response_time_avg) }} min</span>
+                        <span class="metric-label">Avg Response</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Availability -->
+            <div class="profile-card">
+                <h3>Availability Status</h3>
+                <form action="{{ url_for('toggle_availability') }}" method="POST" class="availability-form-large">
+                    <label class="toggle-switch large">
+                        <input type="checkbox" {{ 'checked' if current_user.is_available else '' }} onchange="this.form.submit()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div class="availability-text">
+                        {% if current_user.is_available %}
+                            <span class="status-available">✓ Available for emergencies</span>
+                            <p>You will receive notifications for matching emergency requests.</p>
+                        {% else %}
+                            <span class="status-unavailable">✗ Currently unavailable</span>
+                            <p>You will not receive emergency notifications.</p>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Profile Details -->
+            <div class="profile-card">
+                <h3>Profile Details</h3>
+                <form method="POST" action="{{ url_for('update_profile') }}" class="profile-form">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" value="{{ current_user.email }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" name="phone" value="{{ current_user.phone }}">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city" value="{{ current_user.city }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="district">District</label>
+                            <input type="text" id="district" name="district" value="{{ current_user.district or '' }}">
+                        </div>
+                    </div>
+                    
+                    {% if current_user.role == 'donor' %}
+                    <div class="form-group">
+                        <label for="blood_group">Blood Group</label>
+                        <select id="blood_group" name="blood_group">
+                            <option value="">Select blood group</option>
+                            {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                            <option value="{{ bg }}" {{ 'selected' if current_user.blood_group == bg else '' }}>{{ bg }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="donor-eligibility">
+                        {% if current_user.last_donation_date %}
+                            <p><strong>Last Donation:</strong> {{ current_user.last_donation_date.strftime('%B %d, %Y') }}</p>
+                            {% if current_user.can_donate_blood() %}
+                                <span class="eligible-badge">✓ You are eligible to donate</span>
+                            {% else %}
+                                <span class="not-eligible-badge">⏳ You can donate again after 56 days from your last donation</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="eligible-badge">✓ Eligible to donate (No previous donation recorded)</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <textarea id="address" name="address" rows="2">{{ current_user.address or '' }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+            
+            <!-- Verification Status (Organizations) -->
+            {% if current_user.is_organization() %}
+            <div class="profile-card">
+                <h3>Verification Status</h3>
+                {% if current_user.is_verified %}
+                <div class="verification-status verified">
+                    <span class="verification-icon">✓</span>
+                    <div>
+                        <strong>Verified Organization</strong>
+                        <p>Your organization has been verified and can create emergency requests.</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="verification-status pending">
+                    <span class="verification-icon">⏳</span>
+                    <div>
+                        <strong>Verification Pending</strong>
+                        <p>Your organization is awaiting verification. You can still browse the network.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if contributions %}
+        <!-- Contribution History -->
+        <div class="profile-section">
+            <h2>Recent Contributions</h2>
+            <div class="contributions-list">
+                {% for contrib in contributions %}
+                <div class="contribution-item">
+                    <span class="contribution-type">{{ contrib.contribution_type.title() }}</span>
+                    <span class="contribution-desc">{{ contrib.description }}</span>
+                    <span class="contribution-ecc">+{{ contrib.ecc_earned }} ECC</span>
+                    <span class="contribution-date">{{ contrib.created_at.strftime('%b %d, %Y') }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

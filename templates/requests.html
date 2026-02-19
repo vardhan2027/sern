@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Emergency Requests{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Emergency Requests</h1>
+        <p>Browse and respond to emergency requests across the SERN network</p>
+    </div>
+    
+    <div class="filters-bar">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label for="status">Status</label>
+                <select name="status" id="status" onchange="this.form.submit()">
+                    <option value="open" {{ 'selected' if request.args.get('status') == 'open' else '' }}>Open</option>
+                    <option value="matching" {{ 'selected' if request.args.get('status') == 'matching' else '' }}>Matching</option>
+                    <option value="fulfilled" {{ 'selected' if request.args.get('status') == 'fulfilled' else '' }}>Fulfilled</option>
+                    <option value="" {{ 'selected' if not request.args.get('status') else '' }}>All</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="resource">Resource</label>
+                <select name="resource" id="resource" onchange="this.form.submit()">
+                    <option value="">All Resources</option>
+                    <option value="blood" {{ 'selected' if request.args.get('resource') == 'blood' else '' }}>Blood</option>
+                    <option value="plasma" {{ 'selected' if request.args.get('resource') == 'plasma' else '' }}>Plasma</option>
+                    <option value="oxygen" {{ 'selected' if request.args.get('resource') == 'oxygen' else '' }}>Oxygen</option>
+                    <option value="ambulance" {{ 'selected' if request.args.get('resource') == 'ambulance' else '' }}>Ambulance</option>
+                    <option value="volunteer" {{ 'selected' if request.args.get('resource') == 'volunteer' else '' }}>Volunteer</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="urgency">Urgency</label>
+                <select name="urgency" id="urgency" onchange="this.form.submit()">
+                    <option value="">All Levels</option>
+                    <option value="critical" {{ 'selected' if request.args.get('urgency') == 'critical' else '' }}>Critical</option>
+                    <option value="urgent" {{ 'selected' if request.args.get('urgency') == 'urgent' else '' }}>Urgent</option>
+                    <option value="normal" {{ 'selected' if request.args.get('urgency') == 'normal' else '' }}>Normal</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    
+    {% if requests %}
+    <div class="requests-grid">
+        {% for req in requests %}
+        <div class="request-card urgency-border-{{ req.urgency }}">
+            <div class="request-card-header">
+                <span class="request-id">#{{ req.id }}</span>
+                <span class="urgency-badge urgency-{{ req.urgency }}">{{ req.urgency.upper() }}</span>
+            </div>
+            
+            <div class="request-card-body">
+                <h3 class="resource-title">
+                    {% if req.resource_type == 'blood' %}🩸{% elif req.resource_type == 'ambulance' %}🚑{% elif req.resource_type == 'volunteer' %}🙋{% elif req.resource_type == 'oxygen' %}💨{% else %}🏥{% endif %}
+                    {{ req.resource_type.title() }}
+                    {% if req.blood_group %}<span class="blood-badge">{{ req.blood_group }}</span>{% endif %}
+                </h3>
+                
+                <div class="request-meta">
+                    <p><strong>Units:</strong> {{ req.units_fulfilled }}/{{ req.units_needed }} fulfilled</p>
+                    <p><strong>Hospital:</strong> {{ req.hospital_name or req.requester.name }}</p>
+                    <p><strong>Location:</strong> {{ req.city }}</p>
+                </div>
+                
+                <div class="request-status">
+                    <span class="status-badge status-{{ req.status }}">{{ req.status.replace('_', ' ').title() }}</span>
+                    <span class="time-ago">{{ req.created_at.strftime('%b %d, %H:%M') }}</span>
+                </div>
+            </div>
+            
+            <div class="request-card-footer">
+                <a href="{{ url_for('view_request', request_id=req.id) }}" class="btn btn-outline btn-block">View Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">📭</span>
+        <h3>No requests found</h3>
+        <p>There are no emergency requests matching your filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}New Emergency Request{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-page">
+        <div class="form-header">
+            <h1>🆘 Create Emergency Request</h1>
+            <p>Fill in the details below to broadcast an emergency request to the SERN network.</p>
+        </div>
+        
+        <form method="POST" class="emergency-form">
+            <div class="form-section">
+                <h3>Resource Details</h3>
+                
+                <div class="form-group">
+                    <label for="resource_type">Resource Type *</label>
+                    <select id="resource_type" name="resource_type" required onchange="toggleBloodFields()">
+                        <option value="">Select resource type</option>
+                        <option value="blood">Blood</option>
+                        <option value="plasma">Plasma</option>
+                        <option value="oxygen">Oxygen Support</option>
+                        <option value="ambulance">Ambulance</option>
+                        <option value="volunteer">Emergency Volunteer</option>
+                    </select>
+                </div>
+                
+                <div class="form-row" id="blood-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="blood_group">Blood Group *</label>
+                        <select id="blood_group" name="blood_group">
+                            <option value="">Select blood group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A- (Rare)</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B- (Rare)</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB- (Rare)</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O- (Universal Donor - Rare)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="units_needed">Units Needed *</label>
+                        <input type="number" id="units_needed" name="units_needed" min="1" max="10" value="1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="urgency">Urgency Level *</label>
+                    <div class="urgency-options">
+                        <label class="urgency-option">
+                            <input type="radio" name="urgency" value="critical" required>
+                            <span class="urgency-card urgency-critical">
+                                <strong>🚨 CRITICAL</strong>
+                                <small>Life-threatening, need immediately</small>
+                            </span>
+                        </label>
+                        <label class="urgency-option">
+                            <input type="radio" name="urgency" value="urgent">
+                            <span class="urgency-card urgency-urgent">
+                                <strong>⚠️ URGENT</strong>
+                                <small>Needed within hours</small>
+                            </span>
+                        </label>
+                        <label class="urgency-option">
+                            <input type="radio" name="urgency" value="normal">
+                            <span class="urgency-card urgency-normal">
+                                <strong>📋 NORMAL</strong>
+                                <small>Scheduled/planned need</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Location & Contact</h3>
+                
+                <div class="form-group">
+                    <label for="hospital_name">Hospital/Facility Name</label>
+                    <input type="text" id="hospital_name" name="hospital_name" 
+                           value="{{ current_user.name }}" placeholder="Hospital or facility name">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" value="{{ current_user.city }}" disabled>
+                        <small>Based on your registered location</small>
+                    </div>
+                    <div class="form-group">
+                        <label>District</label>
+                        <input type="text" value="{{ current_user.district or 'Not specified' }}" disabled>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Additional Information</h3>
+                
+                <div class="form-group">
+                    <label for="patient_condition">Patient Condition (Optional)</label>
+                    <textarea id="patient_condition" name="patient_condition" rows="3" 
+                              placeholder="Brief description of the emergency (no personal identifiers)"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-info">
+                <h4>What happens next?</h4>
+                <ul>
+                    <li>SERN will find matching contributors in your area</li>
+                    <li>For rare blood groups or critical cases, search expands automatically</li>
+                    <li>Contributors are notified based on reliability scores (IRI)</li>
+                    <li>You'll receive real-time updates on responses</li>
+                </ul>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg">Broadcast Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleBloodFields() {
+    const resourceType = document.getElementById('resource_type').value;
+    const bloodFields = document.getElementById('blood-fields');
+    bloodFields.style.display = ['blood', 'plasma'].includes(resourceType) ? 'flex' : 'none';
+}
+</script>
+{% endblock %}

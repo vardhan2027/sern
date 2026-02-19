@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card auth-card-wide">
+        <h1 class="auth-title">Join SERN</h1>
+        <p class="auth-subtitle">Register to become part of the emergency response network</p>
+        
+        <form method="POST" class="auth-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Name / Organization Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Create a password">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">I am registering as</label>
+                <select id="role" name="role" required onchange="toggleBloodGroup()">
+                    <option value="">Select your role</option>
+                    <optgroup label="Organizations">
+                        <option value="hospital">Hospital</option>
+                        <option value="blood_bank">Blood Bank</option>
+                        <option value="ngo">NGO</option>
+                        <option value="ambulance">Ambulance Service</option>
+                    </optgroup>
+                    <optgroup label="Individuals">
+                        <option value="donor">Blood Donor</option>
+                        <option value="volunteer">Volunteer</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <div class="form-group" id="blood-group-field" style="display: none;">
+                <label for="blood_group">Blood Group</label>
+                <select id="blood_group" name="blood_group">
+                    <option value="">Select blood group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" required placeholder="Enter your city">
+                </div>
+                
+                <div class="form-group">
+                    <label for="district">District</label>
+                    <input type="text" id="district" name="district" placeholder="Enter your district">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+        
+        <p class="auth-footer">
+            Already have an account? <a href="{{ url_for('login') }}">Login</a>
+        </p>
+    </div>
+</div>
+
+<script>
+function toggleBloodGroup() {
+    const role = document.getElementById('role').value;
+    const bloodGroupField = document.getElementById('blood-group-field');
+    bloodGroupField.style.display = role === 'donor' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

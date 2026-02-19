@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Smart Emergency Resource Network</h1>
+        <p class="hero-subtitle">A trust-driven coordination infrastructure for emergency medical resources</p>
+        <p class="hero-description">
+            Connecting hospitals, blood banks, NGOs, ambulance partners, volunteers, and donors 
+            in a self-regulating network where reliability is built, quantified, and rewarded.
+        </p>
+        <div class="hero-cta">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Join the Network</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">Login</a>
+        </div>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">👥</span>
+                <span class="stat-number">{{ total_users }}</span>
+                <span class="stat-label">Network Members</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🆘</span>
+                <span class="stat-number">{{ total_requests }}</span>
+                <span class="stat-label">Emergency Requests</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">✅</span>
+                <span class="stat-number">{{ fulfilled_requests }}</span>
+                <span class="stat-label">Lives Impacted</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">How SERN Works</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🩸</div>
+                <h3>Multi-Resource Coordination</h3>
+                <p>Blood, plasma, oxygen, ambulance transport, and emergency volunteers - all coordinated through a single platform.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Trust Framework</h3>
+                <p>Emergency Contribution Credits (ECC) for institutions and Individual Reliability Index (IRI) for contributors ensure accountability.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Matching</h3>
+                <p>Location-based matching with eligibility checks. Auto-expansion for rare blood groups and critical emergencies.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time Availability</h3>
+                <p>Simple toggle to update availability. Blood donors tracked for 56-day eligibility constraints.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤝</div>
+                <h3>Partnership Network</h3>
+                <p>Build lasting partnerships between healthcare stakeholders. Every successful coordination strengthens the network.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Transparent Tracking</h3>
+                <p>End-to-end request tracking, duplicate detection, and verification workflows reduce misuse.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="roles-section">
+    <div class="container">
+        <h2 class="section-title">Who Can Join?</h2>
+        <div class="roles-grid">
+            <div class="role-card">
+                <span class="role-icon">🏥</span>
+                <h3>Hospitals</h3>
+                <p>Create emergency requests and coordinate with the network</p>
+            </div>
+            <div class="role-card">
+                <span class="role-icon">🩸</span>
+                <h3>Blood Banks</h3>
+                <p>Manage blood inventory and respond to critical needs</p>
+            </div>
+            <div class="role-card">
+                <span class="role-icon">🤲</span>
+                <h3>NGOs</h3>
+                <p>Coordinate resources and connect with communities</p>
+            </div>
+            <div class="role-card">
+                <span class="role-icon">🚑</span>
+                <h3>Ambulance Services</h3>
+                <p>Provide emergency transport when needed</p>
+            </div>
+            <div class="role-card">
+                <span class="role-icon">💉</span>
+                <h3>Blood Donors</h3>
+                <p>Save lives by donating blood when emergencies arise</p>
+            </div>
+            <div class="role-card">
+                <span class="role-icon">🙋</span>
+                <h3>Volunteers</h3>
+                <p>Support coordination and community outreach</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <h2>Ready to Make a Difference?</h2>
+        <p>Join SERN today and become part of a network that saves lives through trust and cooperation.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started</a>
+    </div>
+</section>
+{% endblock %}

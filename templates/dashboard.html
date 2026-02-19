@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1>Welcome, {{ current_user.name }}</h1>
+            <p class="role-badge role-{{ current_user.role }}">{{ current_user.role.replace('_', ' ').title() }}</p>
+        </div>
+        
+        <div class="quick-stats">
+            {% if current_user.is_organization() %}
+                <div class="stat-badge">
+                    <span class="stat-value">{{ current_user.ecc_credits }}</span>
+                    <span class="stat-name">ECC Credits</span>
+                </div>
+            {% else %}
+                <div class="stat-badge">
+                    <span class="stat-value">{{ "%.1f"|format(current_user.iri_score) }}</span>
+                    <span class="stat-name">IRI Score</span>
+                </div>
+            {% endif %}
+            <div class="stat-badge">
+                <span class="stat-value">{{ current_user.total_requests_fulfilled }}</span>
+                <span class="stat-name">Contributions</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Availability Toggle -->
+        <div class="card availability-card">
+            <h3>Availability Status</h3>
+            <form action="{{ url_for('toggle_availability') }}" method="POST" class="availability-form">
+                <label class="toggle-switch">
+                    <input type="checkbox" {{ 'checked' if current_user.is_available else '' }} onchange="this.form.submit()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="availability-text">
+                    {% if current_user.is_available %}
+                        <span class="status-available">Available for emergencies</span>
+                    {% else %}
+                        <span class="status-unavailable">Currently unavailable</span>
+                    {% endif %}
+                </span>
+            </form>
+            
+            {% if current_user.role == 'donor' %}
+                <div class="donor-info">
+                    <p><strong>Blood Group:</strong> {{ current_user.blood_group or 'Not set' }}</p>
+                    {% if current_user.last_donation_date %}
+                        <p><strong>Last Donation:</strong> {{ current_user.last_donation_date.strftime('%B %d, %Y') }}</p>
+                        {% if current_user.can_donate_blood() %}
+                            <p class="eligible-badge">✓ Eligible to donate</p>
+                        {% else %}
+                            <p class="not-eligible-badge">⏳ Wait until {{ (current_user.last_donation_date + timedelta(days=56)).strftime('%B %d, %Y') }}</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="eligible-badge">✓ Eligible to donate (First time)</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Active Network Requests -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Active Emergencies</h3>
+                <span class="badge badge-urgent">{{ active_requests }} Active</span>
+            </div>
+            <p class="card-description">Emergency requests needing help in your area</p>
+            <a href="{{ url_for('all_requests') }}" class="btn btn-outline">View All Requests</a>
+        </div>
+
+        {% if current_user.is_organization() %}
+        <!-- Create New Request (Organizations only) -->
+        <div class="card highlight-card">
+            <h3>🆘 Create Emergency Request</h3>
+            <p>Need blood, plasma, oxygen, ambulance, or volunteers?</p>
+            <a href="{{ url_for('new_request') }}" class="btn btn-primary">New Request</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if current_user.is_organization() and my_requests %}
+    <!-- My Requests (Organizations) -->
+    <section class="section">
+        <h2 class="section-title">My Emergency Requests</h2>
+        <div class="requests-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Resource</th>
+                        <th>Details</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in my_requests %}
+                    <tr>
+                        <td>#{{ req.id }}</td>
+                        <td>{{ req.resource_type.title() }}</td>
+                        <td>
+                            {% if req.blood_group %}{{ req.blood_group }} - {% endif %}
+                            {{ req.units_needed }} unit(s)
+                        </td>
+                        <td><span class="urgency-badge urgency-{{ req.urgency }}">{{ req.urgency.upper() }}</span></td>
+                        <td><span class="status-badge status-{{ req.status }}">{{ req.status.replace('_', ' ').title() }}</span></td>
+                        <td>{{ req.created_at.strftime('%b %d, %H:%M') }}</td>
+                        <td><a href="{{ url_for('view_request', request_id=req.id) }}" class="btn btn-sm">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if not current_user.is_organization() and incoming_requests %}
+    <!-- Matching Requests (Donors/Volunteers) -->
+    <section class="section">
+        <h2 class="section-title">Emergencies You Can Help With</h2>
+        <div class="request-cards">
+            {% for req in incoming_requests %}
+            <div class="request-card urgency-border-{{ req.urgency }}">
+                <div class="request-card-header">
+                    <span class="resource-type">{{ req.resource_type.title() }}</span>
+                    <span class="urgency-badge urgency-{{ req.urgency }}">{{ req.urgency.upper() }}</span>
+                </div>
+                <div class="request-card-body">
+                    {% if req.blood_group %}
+                    <p><strong>Blood Group:</strong> {{ req.blood_group }}</p>
+                    {% endif %}
+                    <p><strong>Units Needed:</strong> {{ req.units_needed }}</p>
+                    <p><strong>Hospital:</strong> {{ req.hospital_name }}</p>
+                    <p><strong>Location:</strong> {{ req.city }}</p>
+                    <p class="time-ago">Posted {{ req.created_at.strftime('%b %d at %H:%M') }}</p>
+                </div>
+                <div class="request-card-footer">
+                    <a href="{{ url_for('view_request', request_id=req.id) }}" class="btn btn-primary btn-block">Respond</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_responses %}
+    <!-- Recent Activity -->
+    <section class="section">
+        <h2 class="section-title">Your Recent Activity</h2>
+        <div class="activity-list">
+            {% for resp in recent_responses %}
+            <div class="activity-item">
+                <span class="activity-icon">
+                    {% if resp.status == 'completed' %}✅{% elif resp.status == 'accepted' %}📨{% elif resp.status == 'declined' %}❌{% else %}📩{% endif %}
+                </span>
+                <div class="activity-content">
+                    <p>Request #{{ resp.request_id }} - {{ resp.status.title() }}</p>
+                    <span class="activity-time">{{ resp.notified_at.strftime('%b %d, %H:%M') if resp.notified_at else 'N/A' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Request #{{ emergency_request.id }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="request-detail">
+        <div class="request-detail-header">
+            <div class="request-title">
+                <h1>Emergency Request #{{ emergency_request.id }}</h1>
+                <span class="urgency-badge urgency-{{ emergency_request.urgency }} large">
+                    {{ emergency_request.urgency.upper() }}
+                </span>
+            </div>
+            <span class="status-badge status-{{ emergency_request.status }} large">
+                {{ emergency_request.status.replace('_', ' ').title() }}
+            </span>
+        </div>
+        
+        <div class="request-detail-grid">
+            <div class="request-info-card">
+                <h3>Request Details</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Resource Type</span>
+                        <span class="info-value">{{ emergency_request.resource_type.title() }}</span>
+                    </div>
+                    {% if emergency_request.blood_group %}
+                    <div class="info-item">
+                        <span class="info-label">Blood Group</span>
+                        <span class="info-value blood-group">{{ emergency_request.blood_group }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <span class="info-label">Units Needed</span>
+                        <span class="info-value">{{ emergency_request.units_needed }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Units Fulfilled</span>
+                        <span class="info-value">{{ emergency_request.units_fulfilled }}</span>
+                    </div>
+                </div>
+                
+                {% if emergency_request.auto_expanded %}
+                <div class="info-alert">
+                    🔄 Search radius was automatically expanded due to limited local availability.
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="request-info-card">
+                <h3>Location</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Hospital/Facility</span>
+                        <span class="info-value">{{ emergency_request.hospital_name or emergency_request.requester.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">City</span>
+                        <span class="info-value">{{ emergency_request.city }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">District</span>
+                        <span class="info-value">{{ emergency_request.district or 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="request-info-card">
+                <h3>Timeline</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Created</span>
+                        <span class="info-value">{{ emergency_request.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Expires</span>
+                        <span class="info-value">{{ emergency_request.expires_at.strftime('%b %d, %Y at %H:%M') if emergency_request.expires_at else 'N/A' }}</span>
+                    </div>
+                    {% if emergency_request.fulfilled_at %}
+                    <div class="info-item">
+                        <span class="info-label">Fulfilled</span>
+                        <span class="info-value">{{ emergency_request.fulfilled_at.strftime('%b %d, %Y at %H:%M') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if emergency_request.patient_condition %}
+            <div class="request-info-card full-width">
+                <h3>Additional Information</h3>
+                <p>{{ emergency_request.patient_condition }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Response Section for Donors/Volunteers -->
+        {% if can_respond %}
+        <div class="response-section">
+            <h3>🙋 Respond to this Emergency</h3>
+            <p>You are eligible to help with this request.</p>
+            <form method="POST" action="{{ url_for('respond_to_request', request_id=emergency_request.id) }}" class="response-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="units_offered">Units you can provide</label>
+                        <input type="number" name="units_offered" id="units_offered" min="1" max="{{ emergency_request.units_needed }}" value="1">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" name="action" value="accept" class="btn btn-primary">Accept - I Can Help</button>
+                    <button type="submit" name="action" value="decline" class="btn btn-outline">Cannot Help Right Now</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+        
+        {% if user_response %}
+        <div class="response-section">
+            <h3>Your Response</h3>
+            <div class="your-response-status status-{{ user_response.status }}">
+                <p><strong>Status:</strong> {{ user_response.status.title() }}</p>
+                {% if user_response.responded_at %}
+                <p><strong>Responded:</strong> {{ user_response.responded_at.strftime('%b %d at %H:%M') }}</p>
+                {% endif %}
+                {% if user_response.status == 'accepted' %}
+                <p><strong>Units Offered:</strong> {{ user_response.units_offered }}</p>
+                <p class="response-note">Thank you! The requesting organization will contact you shortly.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Responses Section for Organizations -->
+        {% if current_user.id == emergency_request.requester_id and responses %}
+        <div class="responses-section">
+            <h3>Responses ({{ responses|length }})</h3>
+            <div class="responses-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Contributor</th>
+                            <th>Role</th>
+                            <th>Reliability</th>
+                            <th>Status</th>
+                            <th>Units</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resp in responses %}
+                        <tr class="response-row status-{{ resp.status }}">
+                            <td>
+                                <strong>{{ resp.responder.name }}</strong>
+                                {% if resp.responder.blood_group %}
+                                <span class="blood-badge">{{ resp.responder.blood_group }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ resp.responder.role.replace('_', ' ').title() }}</td>
+                            <td>
+                                <span class="iri-score">{{ "%.1f"|format(resp.responder.iri_score) }} IRI</span>
+                            </td>
+                            <td><span class="status-badge status-{{ resp.status }}">{{ resp.status.title() }}</span></td>
+                            <td>{{ resp.units_offered if resp.status == 'accepted' else '-' }}</td>
+                            <td>
+                                {% if resp.status == 'accepted' and emergency_request.status != 'fulfilled' %}
+                                <form method="POST" action="{{ url_for('complete_request', request_id=emergency_request.id) }}" class="inline-form">
+                                    <input type="hidden" name="responder_id" value="{{ resp.responder_id }}">
+                                    <input type="hidden" name="units_provided" value="{{ resp.units_offered }}">
+                                    <select name="rating" class="rating-select">
+                                        <option value="5">⭐⭐⭐⭐⭐</option>
+                                        <option value="4">⭐⭐⭐⭐</option>
+                                        <option value="3">⭐⭐⭐</option>
+                                        <option value="2">⭐⭐</option>
+                                        <option value="1">⭐</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">Mark Complete</button>
+                                </form>
+                                {% elif resp.status == 'completed' %}
+                                ✅ Completed
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="request-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
